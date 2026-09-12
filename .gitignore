@@ -1,0 +1,7 @@
+# CMake build output
+/build/
+
+# Visual Studio local files
+/.vs/
+*.user
+*.suo

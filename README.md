@@ -1,6 +1,6 @@
 # 2d Fluid Motion within Terminal 
 
-### how it works
+### what is it
 
 this is a tiny fluid playground made from a grid of cells. each cell remembers
 how much red, green, and blue dye it contains, plus which way the surrounding

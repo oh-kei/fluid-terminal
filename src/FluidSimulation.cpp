@@ -195,7 +195,10 @@ void FluidSimulation::step(float timeStep) {
     diffuse(redDye_, dyeDiffusion_, timeStep);
     diffuse(greenDye_, dyeDiffusion_, timeStep);
     diffuse(blueDye_, dyeDiffusion_, timeStep);
-    for (float& value : redDye_) value = std::max(0.0F, value);
-    for (float& value : greenDye_) value = std::max(0.0F, value);
-    for (float& value : blueDye_) value = std::max(0.0F, value);
+    // Visible dye fades too: 0.99^300 is about 0.05, leaving a faint trace
+    // after approximately ten seconds at 30 frames per second.
+    constexpr float kDyeRetainedPerFrame = 0.99F;
+    for (float& value : redDye_) value = std::max(0.0F, value * kDyeRetainedPerFrame);
+    for (float& value : greenDye_) value = std::max(0.0F, value * kDyeRetainedPerFrame);
+    for (float& value : blueDye_) value = std::max(0.0F, value * kDyeRetainedPerFrame);
 }

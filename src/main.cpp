@@ -13,7 +13,8 @@
 
 namespace {
 constexpr int kWidth = 64;
-constexpr int kHeight = 28;
+// Leave room for the three control/status lines in a typical terminal window.
+constexpr int kHeight = 24;
 constexpr float kTimeStep = 0.35F;
 constexpr char kRamp[] = " .:-=+*#%@";
 
@@ -27,6 +28,13 @@ bool enableVirtualTerminalOutput() {
 void moveCursorToGridStart() {
     const HANDLE output = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleCursorPosition(output, {0, 0});
+}
+
+void showSelectedColour(const char* colourName) {
+    const HANDLE output = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleCursorPosition(output, {0, static_cast<SHORT>(kHeight + 2)});
+    std::cout << "\x1B[0mselected dye: " << colourName
+              << "                              " << std::flush;
 }
 
 void draw(const FluidSimulation& fluid, int stirrerX, int stirrerY, bool terminalSupportsAnsi) {
@@ -82,15 +90,17 @@ int main() {
         std::cerr << "This program needs a terminal with ANSI support. Run it in Windows Terminal or PowerShell 7.\n";
         return 1;
     }
-    std::cout << "\x1B[2J\x1B[?25l"; // Clear and hide cursor once.
+    std::cout << "\x1B[2J\x1B[H\x1B[?25l"; // Clear, home, and hide cursor once.
     // Reserve the grid area, then write this static help only once below it.
     std::cout << std::string(kHeight, '\n');
-    std::cout << "W/A/S/D: move and stir   Space: add dye   1-5: choose colour   R: reset   Q: quit\n";
-    std::cout << "O is your stirrer. hold movement keys to push the fluid.\n";
+    std::cout << "WASD move  SPACE dye  1 blue  2 red  3 green\n";
+    std::cout << "4 gold  5 purple  R reset  Q quit\n";
+    showSelectedColour("blue");
 
     int stirrerX = kWidth / 2;
     int stirrerY = kHeight / 2;
     DyeColour selectedColour{0.15F, 0.65F, 1.0F};
+    const char* selectedColourName = "blue";
     bool running = true;
     while (running) {
         // _kbhit and _getch are Windows console functions: they read keys
@@ -107,23 +117,24 @@ int main() {
             case 's': case 'S': moveY = 1; break;
             case 'd': case 'D': moveX = 1; break;
             case ' ': addDye = true; break;
-            case '1': selectedColour = {0.15F, 0.65F, 1.0F}; break;
-            case '2': selectedColour = {1.0F, 0.16F, 0.12F}; break;
-            case '3': selectedColour = {0.20F, 1.0F, 0.35F}; break;
-            case '4': selectedColour = {1.0F, 0.68F, 0.10F}; break;
-            case '5': selectedColour = {0.75F, 0.22F, 1.0F}; break;
+            case '1': selectedColour = {0.15F, 0.65F, 1.0F}; selectedColourName = "blue"; break;
+            case '2': selectedColour = {1.0F, 0.16F, 0.12F}; selectedColourName = "red"; break;
+            case '3': selectedColour = {0.20F, 1.0F, 0.35F}; selectedColourName = "green"; break;
+            case '4': selectedColour = {1.0F, 0.68F, 0.10F}; selectedColourName = "gold"; break;
+            case '5': selectedColour = {0.75F, 0.22F, 1.0F}; selectedColourName = "purple"; break;
             case 'r': case 'R': fluid.clear(); break;
             case 'q': case 'Q': running = false; break;
             default: break;
             }
 
             if (moveX != 0 || moveY != 0) {
-                stirrerX = std::clamp(stirrerX + moveX, 3, kWidth - 4);
-                stirrerY = std::clamp(stirrerY + moveY, 3, kHeight - 4);
-                stir(fluid, stirrerX, stirrerY, moveX * 3.5F, moveY * 3.5F, selectedColour, true);
+                stirrerX = std::clamp(stirrerX + moveX * 2, 3, kWidth - 4);
+                stirrerY = std::clamp(stirrerY + moveY * 2, 3, kHeight - 4);
+                stir(fluid, stirrerX, stirrerY, moveX * 7.0F, moveY * 7.0F, selectedColour, true);
             } else if (addDye) {
                 stir(fluid, stirrerX, stirrerY, 0.0F, 0.0F, selectedColour, true);
             }
+            showSelectedColour(selectedColourName);
         }
 
         fluid.step(kTimeStep);

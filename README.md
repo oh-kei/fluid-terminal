@@ -33,7 +33,7 @@ Every cell stores RGB dye and a two-dimensional velocity. Each step:
    approximate incompressible Navier--Stokes flow.
 
 I watched a 2 minute paper videos where he explained this basic concept and thought i might try it!
-https://www.youtube.com/watch?v=mOvtumfyjCs
+https://youtu.be/mOvtumfyjCs?t=287
 
 ## controls
 
